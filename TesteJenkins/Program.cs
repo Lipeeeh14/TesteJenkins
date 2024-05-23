@@ -1,4 +1,10 @@
+using TesteJenkins.DataAccess;
+using TesteJenkins.DTOs;
+using TesteJenkins.Models;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<ITaskDA, TaskDA>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -16,29 +22,27 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/tasks", async (ITaskDA taskDA) =>
 {
-	"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-	var forecast = Enumerable.Range(1, 5).Select(index =>
-		new WeatherForecast
-		(
-			DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-			Random.Shared.Next(-20, 55),
-			summaries[Random.Shared.Next(summaries.Length)]
-		))
-		.ToArray();
-	return forecast;
+	return Results.Ok(await taskDA.GetTasks());
 })
-.WithName("GetWeatherForecast")
+.WithName("GetTasks")
+.WithOpenApi();
+
+app.MapPost("/task", async (TaskDTO taskDTO, ITaskDA taskDA) =>
+{
+	try
+	{
+		await taskDA.SaveTask(new TaskModel(taskDTO.TaskName, taskDTO.DueDate));
+
+		return Results.Ok();
+	}
+	catch (Exception)
+	{
+		return Results.BadRequest();
+	}
+})
+.WithName("PostTask")
 .WithOpenApi();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-	public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
