@@ -8,21 +8,20 @@ services:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=dbtasks
     depends_on:
       - mariadb
 
   mariadb:
     image: mariadb:latest
     container_name: mariadb
-    volumes:
-      - db-data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "3306:3306"
     environment:
       MARIADB_ROOT_PASSWORD: Pass123! 
       MARIADB_DATABASE: dbtasks
-
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+ 
 volumes:
   db-data:
